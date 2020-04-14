@@ -1,5 +1,6 @@
 {
   "name": "react-movie-app",
+  "homepage": "http://mattmiss.com/whatmovies/",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
