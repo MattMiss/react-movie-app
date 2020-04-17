@@ -23,7 +23,7 @@ const SingleGenre = styled.div`
 const Genres = ( {genreList} ) => {
 
     const genreDivs = genreList.map(genre => {
-        console.log(GenreColors(genre.id))
+        //console.log(GenreColors(genre.id))
         return <SingleGenre key={genre.id} color={GenreColors(genre.id)}>{genre.name}</SingleGenre>
     });
 

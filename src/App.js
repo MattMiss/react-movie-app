@@ -1,8 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
 import Card from './components/Card';
 import Spinner from './components/Spinner';
+import Modal from './UI/Modal';
+import MovPreviewFrame from './components/MovPreviewFrame';
 import LazyLoad from 'react-lazyload';
 import styled from 'styled-components';
+import axios from 'axios';
 
 import data from './data';
 
@@ -39,35 +42,62 @@ const TitleBarH2 = styled.h2`
 const App = () => {
 
   const [movieData, setMovieData] = useState([]);
-  const lazyDiv = useRef();
-  // useEffect(() => {
-  //   console.log(url+PAGE)
-  //   axios.all([
-  //     axios.get(url + PAGE),
-  //     axios.get(url + (PAGE + 1)),
-  //     axios.get(url + (PAGE + 2))
-  //   ])
-  //   .then(axios.spread((page1Res, page2Res, page3Res) => {
-  //     setMovieData([...page1Res.data.results, ...page2Res.data.results, ...page3Res.data.results])
-  //     //console.log(JSON.stringify([...page1Res.data.results, ...page2Res.data.results, ...page3Res.data.results]))
-  //   }))
-  //   .catch(error => {
-  //     console.log(error);
-  //   });
-  // }, [])
+  const [showModal, setShowModal] = useState(false);
+  const [previewID, setPreviewID] = useState(null);
+
+  useEffect(() => {
+    //console.log(url+PAGE)
+    axios.all([
+      axios.get(url + PAGE),
+      axios.get(url + (PAGE + 1)),
+      axios.get(url + (PAGE + 2))
+    ])
+    .then(axios.spread((page1Res, page2Res, page3Res) => {
+      setMovieData([...page1Res.data.results, ...page2Res.data.results, ...page3Res.data.results])
+      //console.log(JSON.stringify([...page1Res.data.results, ...page2Res.data.results, ...page3Res.data.results]))
+    }))
+    .catch(error => {
+      console.log(error);
+    });
+  }, [])
+
+  const closeModalHandler = () => {
+    setShowModal(false);
+    setPreviewID(null);
+  };
+
+  const showPreviewHandler = (movID) => {
+    setShowModal(true);
+    setPreviewID(movID);
+  };
+
+  // const moviePreview = previewID ? <iframe 
+  //   src={`https://www.imdb.com/video/user/${previewID}/imdb/embed?autoplay=false&width=480`} 
+  //   width="480" 
+  //   height="270" 
+  //   allowFullScreen={true}  
+  //   frameBorder="no" 
+  //   scrolling="no">
+  // </iframe> : null;
+
+const moviePreview = previewID ? <MovPreviewFrame movID ={previewID} /> : null;
+
 
   return(
     <AppDiv >
+      <Modal showModal={showModal} modalClosed={closeModalHandler}>
+        {moviePreview}
+      </Modal>
       <TitleBarH2>Current Popular Movies</TitleBarH2>
       <div className="post-container" >
-        {data.map(post => (
+        {movieData.map(post => (
           <LazyLoad 
             key={post.id} 
             height={100}
             offset={[-100, 100]}
             placeholder={<Spinner />}
           >
-            <Card key={post.id} {...post} />
+            <Card key={post.id} {...post} clicked={id => showPreviewHandler(id)} />
           </LazyLoad>
         ))}
       </div>

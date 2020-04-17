@@ -2,33 +2,41 @@ import React, {useState, useEffect} from 'react';
 
 import Spinner from './Spinner';
 import Genres from './Genres';
+import Cast from './Cast';
 import LazyLoad from 'react-lazyload';
 import styled from 'styled-components';
-import data2 from '../data2';
+//import data2 from '../data2';
 import axios from 'axios';
 
 const CardDiv = styled.div`
     display: flex;
+    flex-wrap: wrap;
     margin: 10px 20px;
     max-width: 700px;
     min-height: 200px;
     border-radius: 5px;
     background-color: white;
+
+    @media(min-width: 500px){
+        flex-wrap: nowrap;
+    }
 `;
 
 const CardLeftDiv = styled.div`
-    flex: 1;
     min-width: 135px;
     padding: 10px;
+    flex: 1;
+    text-align: center;
 `;
 
 const CardImg = styled.img`
     height: 200px;
     border-radius: 5px;
+    
 `;
 
 const CardContent = styled.div`
-    flex: 5;
+    
     padding: 10px;
 `;
 
@@ -50,7 +58,6 @@ const DesktopRatingContainer = styled.div`
 
 const MobileRatingContainer = styled.div`
     padding-top: 10px;
-
     @media(min-width: 500px){
         display: none;
     }
@@ -60,6 +67,7 @@ const MovieRatingDiv = styled.div`
     width: 40px;
     height: 40px;
     border-radius: 50%;
+    text-align: left;
     background-color: ${props => props.color};
     border: 2px solid #888;
     font-size: 1.5rem;
@@ -85,6 +93,18 @@ const DateTimeDiv = styled.div`
     padding: 5px 5px 0 5px;
 `;
 
+const WatchTrailerDiv = styled.div`
+    text-align: center;
+    padding-top: 10px;
+    color: #035bbc;
+    font-weight: 500;
+    font-size: .9rem;
+
+    &:hover{
+        cursor: pointer;
+    }
+`;
+
 const RuntimeDiv = styled.div`
     
 `;
@@ -96,13 +116,13 @@ const ReleaseDateDiv = styled.div`
 const url = 'https://imdb-internet-movie-database-unofficial.p.rapidapi.com/film/';
 const url2 = 'https://movie-database-imdb-alternative.p.rapidapi.com/'
 
-const Card = ({id, title, overview, poster_path}) => {
+const Card = ({clicked, id, title, overview, poster_path}) => {
 
     const [movie, setMovie] = useState(null);
     const [imdbData, setImdbData] = useState(null);
 
     useEffect(() => {
-        console.log("Title: " + title + ", ID: " + id)
+        //console.log("Title: " + title + ", ID: " + id)
         if (id){
             // Get IMDB info based on movie ID
             axios.get(`https://api.themoviedb.org/3/movie/${id}?api_key=aa90bb6b62b3cbed1840017d68be3764&language=en-US`)
@@ -121,7 +141,7 @@ const Card = ({id, title, overview, poster_path}) => {
             axios.get(`https://api.themoviedb.org/3/movie/${title}?api_key=aa90bb6b62b3cbed1840017d68be3764&language=en-US`)
             .then(response => {
                 if(response.data){
-                    console.log(response.data)
+                    //console.log(response.data)
                 }
                 
                 //console.log(JSON.stringify(response.data))
@@ -133,7 +153,7 @@ const Card = ({id, title, overview, poster_path}) => {
 
     useEffect(() => {
         if (movie){
-            console.log(movie)
+            //console.log(movie)
             getIMDBData(movie.imdb_id)
         }  
     }, [movie])
@@ -148,7 +168,7 @@ const Card = ({id, title, overview, poster_path}) => {
             }
           })
         .then(res => {
-            console.log("Query: " + query + ", Data: " + JSON.stringify(res.data))
+            //console.log("Query: " + query + ", Data: " + JSON.stringify(res.data))
             setImdbData(res.data)
         })
         .catch(err => console.log(err))
@@ -276,13 +296,25 @@ const Card = ({id, title, overview, poster_path}) => {
             }else{
                 color = '#333'
             }
-            console.log("PIX", num, color)
+            //console.log("PIX", num, color)
             return color;
         }
     };
 
+    const getMovieID = (data) => {
+        const linkElements = data.trailer.link.split("/");
+        const linkID = linkElements[linkElements.length - 1];
+        return linkID;
+    };
+
+    const actorClickHandler = (actorID) => {
+        window.open(`https://www.imdb.com/name/${actorID}/`, "_blank")
+    };
+
 
     const genreContainer = movie ? <Genres genreList={movie.genres} /> : null;
+    const castContainer = imdbData ? <Cast castList={imdbData.cast} actorClicked={actorClickHandler} /> : null;
+    const previewID = imdbData ? getMovieID(imdbData) : null;
 
     return(
     <CardDiv>
@@ -302,6 +334,7 @@ const Card = ({id, title, overview, poster_path}) => {
                 <IMDBDiv>IMDB</IMDBDiv>
                 <MovieRatingDiv color={imdbData ? getRatingColor(imdbData.rating) : '#333'}>{imdbData ? imdbData.rating : null}</MovieRatingDiv>
             </MobileRatingContainer>
+            <WatchTrailerDiv onClick={() => clicked(previewID)}>Watch Trailer</WatchTrailerDiv>
         </CardLeftDiv>
         
         
@@ -321,6 +354,11 @@ const Card = ({id, title, overview, poster_path}) => {
             placeholder={<Spinner />}
         >
             {genreContainer}    
+        </LazyLoad>
+        <LazyLoad
+            placeholder={<Spinner />}
+        >
+            {castContainer}    
         </LazyLoad>
       </CardContent>
     </CardDiv>
